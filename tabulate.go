@@ -107,6 +107,8 @@ func valueString(val any) string {
 		res = strconv.FormatFloat(float64(val), 'f', -1, 32)
 	case float64:
 		res = strconv.FormatFloat(val, 'f', -1, 64)
+	case func() string:
+		res = val()
 	case fmt.Stringer:
 		res = val.String()
 	default:

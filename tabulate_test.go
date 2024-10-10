@@ -16,6 +16,7 @@ func TestCreateTableWithInstance(t *testing.T) {
 	tab.AddRow(Row{"b": 2})
 	tab.AddRow(Row{"d": "something"})
 	tab.AddRow(Row{"d": 1.23})
+	tab.AddRow(Row{"d": func() string { return "cb-val" }})
 	out := bytes.NewBuffer(nil)
 	err := tab.Print(out)
 	if err != nil {
@@ -30,6 +31,7 @@ func TestCreateTableWithInstance(t *testing.T) {
 		"|    |  2 |    |           |",
 		"|    |    |    | something |",
 		"|    |    |    |      1.23 |",
+		"|    |    |    |    cb-val |",
 		"",
 	}
 
@@ -168,6 +170,11 @@ func TestValueString(t *testing.T) {
 				b: true,
 			},
 			want: `a="aaa" b=true`,
+		},
+		{
+			name:  "callback no args",
+			input: func() string { return "123" },
+			want:  "123",
 		},
 	}
 
