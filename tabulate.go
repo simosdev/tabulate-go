@@ -126,6 +126,7 @@ func (t *tabulater) colMaxValueLengths() map[string]int {
 		for _, col := range t.cols {
 			if oldLen, ok := lengths[col]; ok {
 				vl := valueLength(row[col])
+				vl = max(vl, len(col))
 				if vl > oldLen {
 					lengths[col] = vl
 				}
