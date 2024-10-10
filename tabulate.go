@@ -93,26 +93,24 @@ func (t *tabulater) colMaxValueLengths() map[string]int {
 }
 
 func valueLength(val any) int {
-	var res int
-	// TODO: type cast different value types
-	switch val := val.(type) {
-	case string:
-		res = len(val)
-	case int:
-		res = len(strconv.Itoa(val))
-	case float32:
-		res = len(strconv.FormatFloat(float64(val), 'f', -1, 32))
-	case float64:
-		res = len(strconv.FormatFloat(val, 'f', -1, 64))
-	default:
-		res = 0
-	}
-	return res
+	return len(valueString(val))
 }
 
 func valueString(val any) string {
 	if val == nil {
 		return ""
 	}
-	return fmt.Sprintf("%v", val)
+
+	var res string
+	switch val := val.(type) {
+	case float32:
+		res = strconv.FormatFloat(float64(val), 'f', -1, 32)
+	case float64:
+		res = strconv.FormatFloat(val, 'f', -1, 64)
+	case fmt.Stringer:
+		res = val.String()
+	default:
+		res = fmt.Sprintf("%v", val)
+	}
+	return res
 }

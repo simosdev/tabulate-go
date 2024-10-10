@@ -2,6 +2,7 @@ package tabulate
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -69,4 +70,114 @@ func TestColumnMaxLengths(t *testing.T) {
 		t.Logf("diff: %s", cmp.Diff(expected, res))
 	}
 
+}
+
+// ensure the stringerStruct implements fmt.Stringer at compile time
+var _ fmt.Stringer = (*stringerStruct)(nil)
+
+type stringerStruct struct {
+	a string
+	b bool
+}
+
+func (s *stringerStruct) String() string {
+	return fmt.Sprintf("a=%q b=%t", s.a, s.b)
+}
+
+func TestValueString(t *testing.T) {
+
+	tests := []struct {
+		name  string
+		input any
+		want  string
+	}{
+		{
+			name:  "nil",
+			input: nil,
+			want:  "",
+		},
+		{
+			name:  "bool false",
+			input: false,
+			want:  "false",
+		},
+		{
+			name:  "bool true",
+			input: true,
+			want:  "true",
+		},
+		{
+			name:  "float32",
+			input: float32(1.23),
+			want:  "1.23",
+		},
+		{
+			name:  "float64",
+			input: float64(1.23),
+			want:  "1.23",
+		},
+		{
+			name:  "int",
+			input: 123,
+			want:  "123",
+		},
+		{
+			name:  "int32",
+			input: int32(123),
+			want:  "123",
+		},
+		{
+			name:  "int64",
+			input: int64(123),
+			want:  "123",
+		},
+		{
+			name: "plain struct value",
+			input: struct {
+				a string
+				b bool
+			}{
+				a: "aaa",
+				b: true,
+			},
+			want: "{aaa true}",
+		},
+		{
+			name: "plain struct pointer",
+			input: &struct {
+				a string
+				b bool
+			}{
+				a: "aaa",
+				b: true,
+			},
+			want: "&{aaa true}",
+		},
+		{
+			name: "stringer struct value",
+			input: &stringerStruct{
+				a: "aaa",
+				b: true,
+			},
+			want: `a="aaa" b=true`,
+		},
+		{
+			name: "stringer struct pointer",
+			input: &stringerStruct{
+				a: "aaa",
+				b: true,
+			},
+			want: `a="aaa" b=true`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			res := valueString(tt.input)
+			if res != tt.want {
+				t.Errorf("valueString unexpected result: %q", res)
+				t.Logf("diff (-want, +got): %s", cmp.Diff(tt.want, res))
+			}
+		})
+	}
 }
