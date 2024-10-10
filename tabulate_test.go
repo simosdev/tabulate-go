@@ -3,8 +3,10 @@ package tabulate
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -236,4 +238,41 @@ func TestValueString(t *testing.T) {
 			}
 		})
 	}
+}
+
+func ExampleTabulater_Add() {
+	data := []struct {
+		time   time.Time
+		metric string
+		count  any
+	}{
+		{
+			time:   time.Time{},
+			metric: "a",
+			count:  1,
+		},
+		{
+			time:   time.Time{},
+			metric: "b",
+			count:  20,
+		},
+		{
+			time:   time.Time{},
+			metric: "c",
+			count:  1.23,
+		},
+	}
+
+	tab := New([]string{"time", "metric", "count"})
+	for _, elem := range data {
+		tab.Add(func() string { return elem.time.Format("2006-01-02T15:04") }, elem.metric, elem.count)
+	}
+
+	tab.Print(os.Stdout)
+	// Output:
+	// |             time | metric | count |
+	// |------------------|--------|-------|
+	// | 0001-01-01T00:00 |      a |     1 |
+	// | 0001-01-01T00:00 |      b |    20 |
+	// | 0001-01-01T00:00 |      c |  1.23 |
 }
