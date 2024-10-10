@@ -9,19 +9,64 @@ import (
 
 type Row map[string]any
 
-type tabulater struct {
-	cols []string
-	rows []Row
+// WithStrict sets strict in options.
+// In strict mode colums need to be defined before [Add] call.
+func WithStrict(v bool) option {
+	return func(o *options) {
+		o.strict = v
+	}
 }
 
-func New(cols ...string) *tabulater {
-	res := &tabulater{}
-	res.Columns(cols...)
+type option func(o *options)
+
+type options struct {
+	strict bool
+}
+
+type tabulater struct {
+	cols    []string
+	rows    []Row
+	options options
+}
+
+func New(cols []string, opts ...option) *tabulater {
+	options := options{}
+	for _, opt := range opts {
+		opt(&options)
+	}
+	res := &tabulater{cols: cols, options: options}
 	return res
 }
 
 func (t *tabulater) Columns(cols ...string) {
 	t.cols = append(t.cols, cols...)
+}
+
+// Add supports adding values without re-defining the column names.
+// In non-strict mode: If amount of values is larger than the defined columns, Add creates ad-hoc dynamic column names.
+// In strict mode: Add will panic if amount of values is larger than defined columns.
+func (t *tabulater) Add(values ...any) {
+	if t.options.strict && len(values) > len(t.cols) {
+		panic(
+			fmt.Sprintf("tabulate: Add supplied with more values than columns: %d vs %d",
+				len(values),
+				len(t.cols),
+			),
+		)
+	}
+
+	row := make(Row, 0)
+	for i, v := range values {
+		var col string
+		if i >= len(t.cols) {
+			col = fmt.Sprintf("col-%d", i)
+			t.cols = append(t.cols, col)
+		} else {
+			col = t.cols[i]
+		}
+		row[col] = v
+	}
+	t.rows = append(t.rows, row)
 }
 
 func (t *tabulater) AddRow(row Row) {
