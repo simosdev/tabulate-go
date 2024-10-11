@@ -3,6 +3,7 @@ package tabulate
 import (
 	"fmt"
 	"io"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -69,9 +70,24 @@ func (t *Tabulator) Add(values ...any) {
 	t.rows = append(t.rows, row)
 }
 
-func (t *Tabulator) AddRow(row Row) {
-	// TODO: add possible new keys to cols slice if not already present
-	t.rows = append(t.rows, row)
+// AddRow allows specifying columns and values.
+// Colum names not already defined will be added at the end sorted ascending.
+func (t *Tabulator) AddRow(rows ...Row) {
+	missingCols := make(map[string]struct{}, 0)
+	for _, row := range rows {
+		for k := range row {
+			if _, ok := missingCols[k]; !ok && !slices.Contains(t.cols, k) {
+				missingCols[k] = struct{}{}
+			}
+		}
+	}
+	keys := make([]string, 0, len(missingCols))
+	for c := range missingCols {
+		keys = append(keys, c)
+	}
+	slices.Sort(keys)
+	t.cols = append(t.cols, keys...)
+	t.rows = append(t.rows, rows...)
 }
 
 func (t *Tabulator) Print(w io.Writer) error {
