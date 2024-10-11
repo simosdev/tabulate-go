@@ -28,26 +28,7 @@ func TestTabulate(t *testing.T) {
 		"",
 	}
 
-	t.Logf("res:\n%s", res)
-	lines := strings.Split(res, "\n")
-	if len(lines) != len(expectedLines) {
-		t.Errorf("got %d lines, want %d lines", len(lines), len(expectedLines))
-		if len(lines) > len(expectedLines) {
-			for i := len(expectedLines); i < len(lines); i++ {
-				t.Logf("extra line [%d]: %q", i, lines[i])
-			}
-		}
-	}
-	for i, exp := range expectedLines {
-		if i >= len(lines) {
-			continue
-		}
-		if lines[i] != exp {
-			t.Logf("got [%d]:  %q", i, lines[i])
-			t.Logf("want [%d]: %q", i, exp)
-			t.Errorf("difference on line index: %d", i)
-		}
-	}
+	assertRows(t, expectedLines, res)
 }
 
 func TestCreateTableWithInstance(t *testing.T) {
@@ -81,26 +62,7 @@ func TestCreateTableWithInstance(t *testing.T) {
 	}
 
 	res := out.String()
-	t.Logf("res:\n%s", res)
-	lines := strings.Split(res, "\n")
-	if len(lines) != len(expectedLines) {
-		t.Errorf("got %d lines, want %d lines", len(lines), len(expectedLines))
-		if len(lines) > len(expectedLines) {
-			for i := len(expectedLines); i < len(lines); i++ {
-				t.Logf("extra line [%d]: %q", i, lines[i])
-			}
-		}
-	}
-	for i, exp := range expectedLines {
-		if i >= len(lines) {
-			continue
-		}
-		if lines[i] != exp {
-			t.Logf("got [%d]:  %q", i, lines[i])
-			t.Logf("want [%d]: %q", i, exp)
-			t.Errorf("difference on line index: %d", i)
-		}
-	}
+	assertRows(t, expectedLines, res)
 }
 
 func TestAddRowWithAutoAddColumns(t *testing.T) {
@@ -125,26 +87,7 @@ func TestAddRowWithAutoAddColumns(t *testing.T) {
 	}
 
 	res := out.String()
-	t.Logf("res:\n%s", res)
-	lines := strings.Split(res, "\n")
-	if len(lines) != len(expectedLines) {
-		t.Errorf("got %d lines, want %d lines", len(lines), len(expectedLines))
-		if len(lines) > len(expectedLines) {
-			for i := len(expectedLines); i < len(lines); i++ {
-				t.Logf("extra line [%d]: %q", i, lines[i])
-			}
-		}
-	}
-	for i, exp := range expectedLines {
-		if i >= len(lines) {
-			continue
-		}
-		if lines[i] != exp {
-			t.Logf("got [%d]:  %q", i, lines[i])
-			t.Logf("want [%d]: %q", i, exp)
-			t.Errorf("difference on line index: %d", i)
-		}
-	}
+	assertRows(t, expectedLines, res)
 }
 
 func TestAddWithDynamicColumns(t *testing.T) {
@@ -174,6 +117,11 @@ func TestAddWithDynamicColumns(t *testing.T) {
 	}
 
 	res := out.String()
+	assertRows(t, expectedLines, res)
+}
+
+func assertRows(t *testing.T, expectedLines []string, res string) {
+	t.Helper()
 	t.Logf("res:\n%s", res)
 	lines := strings.Split(res, "\n")
 	if len(lines) != len(expectedLines) {
