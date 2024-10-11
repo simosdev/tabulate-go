@@ -16,6 +16,8 @@ func TestCreateTableWithInstance(t *testing.T) {
 	tab.AddRow(Row{"a": 1, "bbb": 2, "c": 3})
 	tab.AddRow(Row{"a": 10, "bbb": 20, "c": 30})
 	tab.AddRow(Row{"bbb": 2})
+	tab.AddRow(Row{"a": []int{1, 2, 3}})
+	tab.AddRow(Row{"a": map[string]int{"h": 1, "i": 2}})
 	tab.AddRow(Row{"d": "something"})
 	tab.AddRow(Row{"d": 1.23})
 	tab.AddRow(Row{"d": func() string { return "cb-val" }})
@@ -26,14 +28,16 @@ func TestCreateTableWithInstance(t *testing.T) {
 	}
 
 	expectedLines := []string{
-		"|  a | bbb |  c |         d |",
-		"|----|-----|----|-----------|",
-		"|  1 |   2 |  3 |           |",
-		"| 10 |  20 | 30 |           |",
-		"|    |   2 |    |           |",
-		"|    |     |    | something |",
-		"|    |     |    |      1.23 |",
-		"|    |     |    |    cb-val |",
+		"|            a | bbb |  c |         d |",
+		"|--------------|-----|----|-----------|",
+		"|            1 |   2 |  3 |           |",
+		"|           10 |  20 | 30 |           |",
+		"|              |   2 |    |           |",
+		"|      [1 2 3] |     |    |           |",
+		"| map[h:1 i:2] |     |    |           |",
+		"|              |     |    | something |",
+		"|              |     |    |      1.23 |",
+		"|              |     |    |    cb-val |",
 		"",
 	}
 
