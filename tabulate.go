@@ -23,29 +23,29 @@ type options struct {
 	strict bool
 }
 
-type tabulater struct {
+type Tabulator struct {
 	cols    []string
 	rows    []Row
 	options options
 }
 
-func New(cols []string, opts ...option) *tabulater {
+func New(cols []string, opts ...option) *Tabulator {
 	options := options{}
 	for _, opt := range opts {
 		opt(&options)
 	}
-	res := &tabulater{cols: cols, options: options}
+	res := &Tabulator{cols: cols, options: options}
 	return res
 }
 
-func (t *tabulater) Columns(cols ...string) {
+func (t *Tabulator) Columns(cols ...string) {
 	t.cols = append(t.cols, cols...)
 }
 
 // Add supports adding values without re-defining the column names.
 // In non-strict mode: If amount of values is larger than the defined columns, Add creates ad-hoc dynamic column names.
 // In strict mode: Add will panic if amount of values is larger than defined columns.
-func (t *tabulater) Add(values ...any) {
+func (t *Tabulator) Add(values ...any) {
 	if t.options.strict && len(values) > len(t.cols) {
 		panic(
 			fmt.Sprintf("tabulate: Add supplied with more values than columns: %d vs %d",
@@ -69,12 +69,12 @@ func (t *tabulater) Add(values ...any) {
 	t.rows = append(t.rows, row)
 }
 
-func (t *tabulater) AddRow(row Row) {
+func (t *Tabulator) AddRow(row Row) {
 	// TODO: add possible new keys to cols slice if not already present
 	t.rows = append(t.rows, row)
 }
 
-func (t *tabulater) Print(w io.Writer) error {
+func (t *Tabulator) Print(w io.Writer) error {
 	maxValueLengths := t.colMaxValueLengths()
 
 	// column names
@@ -120,7 +120,7 @@ func (t *tabulater) Print(w io.Writer) error {
 	return nil
 }
 
-func (t *tabulater) colMaxValueLengths() map[string]int {
+func (t *Tabulator) colMaxValueLengths() map[string]int {
 	lengths := make(map[string]int, 0)
 	for _, row := range t.rows {
 		for _, col := range t.cols {

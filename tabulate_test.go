@@ -244,7 +244,7 @@ func TestValueString(t *testing.T) {
 	}
 }
 
-func ExampleTabulater_Add() {
+func ExampleTabulator_Add() {
 	data := []struct {
 		time   time.Time
 		metric string
