@@ -1,6 +1,7 @@
 package tabulate
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"slices"
@@ -37,6 +38,16 @@ func New(cols []string, opts ...option) *Tabulator {
 	}
 	res := &Tabulator{cols: cols, options: options}
 	return res
+}
+
+// Tabulate creates a string table from supplied rows.
+// Columns are created in sorted ascending if all columns are not provided.
+func Tabulate(cols []string, rows ...Row) string {
+	tab := New(cols)
+	tab.AddRow(rows...)
+	buf := bytes.NewBuffer(nil)
+	tab.Print(buf)
+	return buf.String()
 }
 
 func (t *Tabulator) Columns(cols ...string) {
