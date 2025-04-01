@@ -90,6 +90,35 @@ func TestAddRowWithAutoAddColumns(t *testing.T) {
 	assertRows(t, expectedLines, res)
 }
 
+func TestAddRowWithExtraColumns(t *testing.T) {
+	tab := New([]string{"a", "b", "c"})
+	row1 := Row{"a": 1}
+	row1["d"] = 3
+	tab.AddRow(row1)
+	tab.AddRow(Row{"a": 10, "c": 30, "b": 20})
+	row3 := Row{"b": 2}
+	row3["d"] = 15
+	tab.AddRow(row3)
+
+	out := bytes.NewBuffer(nil)
+	err := tab.Print(out)
+	if err != nil {
+		t.Fatalf("Print failed: %s", err)
+	}
+
+	expectedLines := []string{
+		"|  a |  b |  c |  d |",
+		"|----|----|----|----|",
+		"|  1 |    |    |  3 |",
+		"| 10 | 20 | 30 |    |",
+		"|    |  2 |    | 15 |",
+		"",
+	}
+
+	res := out.String()
+	assertRows(t, expectedLines, res)
+}
+
 func TestAddWithDynamicColumns(t *testing.T) {
 	tab := New([]string{"a", "b", "c"})
 	tab.Add(1, 2, 3)
