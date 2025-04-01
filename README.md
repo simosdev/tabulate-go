@@ -43,7 +43,11 @@ func main() {
 
 	tab := New([]string{"time", "metric", "count"})
 	for _, elem := range data {
-		tab.Add(func() string { return elem.time.Format("2006-01-02T15:04") }, elem.metric, elem.count)
+		tab.Add(
+			func() string { return elem.time.Format("2006-01-02T15:04") },
+			elem.metric,
+			elem.count,
+		)
 	}
 
 	tab.Print(os.Stdout)
