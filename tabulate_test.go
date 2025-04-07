@@ -149,9 +149,32 @@ func TestAddWithDynamicColumns(t *testing.T) {
 	assertRows(t, expectedLines, res)
 }
 
+func TestAddWithPredefinedColumns(t *testing.T) {
+	tab := New([]string{"outcome", "duration", "testname"})
+	tab.Add("Passed", "00:00:00.0023133", "corre_test.UnitTest1.Test1")
+	tab.Add("Passed", "00:00:00.0725194", "corre_test.UnitTest1.Test2")
+	out := bytes.NewBuffer(nil)
+	err := tab.Print(out)
+	if err != nil {
+		t.Fatalf("Print failed: %s", err)
+	}
+
+	expectedLines := []string{
+		"| outcome |         duration |                   testname |",
+		"|---------|------------------|----------------------------|",
+		"|  Passed | 00:00:00.0023133 | corre_test.UnitTest1.Test1 |",
+		"|  Passed | 00:00:00.0725194 | corre_test.UnitTest1.Test2 |",
+		"",
+	}
+
+	res := out.String()
+	assertRows(t, expectedLines, res)
+}
+
 func assertRows(t *testing.T, expectedLines []string, res string) {
 	t.Helper()
 	t.Logf("res:\n%s", res)
+	t.Logf("want\n%s", strings.Join(expectedLines, "\n"))
 	lines := strings.Split(res, "\n")
 	if len(lines) != len(expectedLines) {
 		t.Errorf("got %d lines, want %d lines", len(lines), len(expectedLines))

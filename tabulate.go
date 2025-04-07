@@ -147,18 +147,19 @@ func (t *Tabulator) Print(w io.Writer) error {
 	return nil
 }
 
+// colMaxValueLengths returns the max length for each column
 func (t *Tabulator) colMaxValueLengths() map[string]int {
 	lengths := make(map[string]int, 0)
 	for _, row := range t.rows {
 		for _, col := range t.cols {
+			vl := valueLength(row[col])
+			vl = max(vl, len(col))
 			if oldLen, ok := lengths[col]; ok {
-				vl := valueLength(row[col])
-				vl = max(vl, len(col))
 				if vl > oldLen {
 					lengths[col] = vl
 				}
 			} else {
-				lengths[col] = valueLength(row[col])
+				lengths[col] = vl
 			}
 		}
 	}
