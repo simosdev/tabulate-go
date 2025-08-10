@@ -171,6 +171,14 @@ func TestAddWithPredefinedColumns(t *testing.T) {
 	assertRows(t, expectedLines, res)
 }
 
+func TestStringWidth(t *testing.T) {
+	res := valueLength("\033[31mHello\033[0m \033[32mWorld\033[0m")
+	expected := 11
+	if res != expected {
+		t.Errorf("valueLength() = %d, want %d", res, expected)
+	}
+}
+
 func assertRows(t *testing.T, expectedLines []string, res string) {
 	t.Helper()
 	t.Logf("res:\n%s", res)

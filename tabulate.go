@@ -7,6 +7,9 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/d3mondev/stripcol"
+	"github.com/mattn/go-runewidth"
 )
 
 type Row map[string]any
@@ -106,7 +109,7 @@ func (t *Tabulator) Print(w io.Writer) error {
 
 	// column names
 	for _, col := range t.cols {
-		diff := maxValueLengths[col] - len(col)
+		diff := maxValueLengths[col] - valueLength(col)
 		diff = max(diff, 0)
 		_, err := fmt.Fprintf(w, "| %s%s ", strings.Repeat(" ", diff), col)
 		if err != nil {
@@ -153,7 +156,7 @@ func (t *Tabulator) colMaxValueLengths() map[string]int {
 	for _, row := range t.rows {
 		for _, col := range t.cols {
 			vl := valueLength(row[col])
-			vl = max(vl, len(col))
+			vl = max(vl, valueLength(col))
 			if oldLen, ok := lengths[col]; ok {
 				if vl > oldLen {
 					lengths[col] = vl
@@ -167,7 +170,7 @@ func (t *Tabulator) colMaxValueLengths() map[string]int {
 }
 
 func valueLength(val any) int {
-	return len(valueString(val))
+	return runewidth.StringWidth(stripcol.StripColor(valueString(val)))
 }
 
 func valueString(val any) string {
@@ -181,6 +184,8 @@ func valueString(val any) string {
 		res = strconv.FormatFloat(float64(val), 'f', -1, 32)
 	case float64:
 		res = strconv.FormatFloat(val, 'f', -1, 64)
+	case string:
+		res = val
 	case func() string:
 		res = val()
 	case fmt.Stringer:
