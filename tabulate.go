@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"maps"
 	"slices"
 	"strconv"
 	"strings"
@@ -15,7 +16,7 @@ import (
 type Row map[string]any
 
 // WithStrict sets strict in options.
-// In strict mode colums need to be defined before [Add] call.
+// In strict mode colums need to be defined before [*Tabulator.Add] call.
 func WithStrict(v bool) option {
 	return func(o *options) {
 		o.strict = v
@@ -29,9 +30,10 @@ type options struct {
 }
 
 type Tabulator struct {
-	cols    []string
-	rows    []Row
-	options options
+	cols          []string
+	rows          []Row
+	activeColumns map[string]bool
+	options       options
 }
 
 func New(cols []string, opts ...option) *Tabulator {
@@ -39,7 +41,11 @@ func New(cols []string, opts ...option) *Tabulator {
 	for _, opt := range opts {
 		opt(&options)
 	}
-	res := &Tabulator{cols: cols, options: options}
+	activeCols := make(map[string]bool, len(cols))
+	for _, col := range cols {
+		activeCols[col] = true
+	}
+	res := &Tabulator{cols: cols, options: options, activeColumns: activeCols}
 	return res
 }
 
@@ -53,8 +59,35 @@ func Tabulate(cols []string, rows ...Row) string {
 	return buf.String()
 }
 
+// Columns adds specified colums to the list of columns defined for Tabulator.
+// New columns are automatically set active to be printed if they do not already have active column specification.
 func (t *Tabulator) Columns(cols ...string) {
 	t.cols = append(t.cols, cols...)
+	for _, c := range cols {
+		if _, ok := t.activeColumns[c]; !ok {
+			t.activeColumns[c] = true
+		}
+	}
+}
+
+// SetActiveColumns causes only specified columns to be displayed via [*Tabulator.Print]
+func (t *Tabulator) SetActiveColumns(cols ...string) {
+	spec := make(map[string]bool, len(cols))
+	for c := range t.activeColumns {
+		spec[c] = false
+	}
+	for _, c := range cols {
+		spec[c] = true
+	}
+	t.SetActiveColumnsMap(spec)
+}
+
+// SetActiveColumnsMap causes only specified columns where map value is true to be displayed via [*Tabulator.Print]
+func (t *Tabulator) SetActiveColumnsMap(colSpec map[string]bool) {
+	if len(colSpec) == 0 {
+		return
+	}
+	maps.Copy(t.activeColumns, colSpec)
 }
 
 // Add supports adding values without re-defining the column names.
@@ -109,6 +142,9 @@ func (t *Tabulator) Print(w io.Writer) error {
 
 	// column names
 	for _, col := range t.cols {
+		if !t.isActiveColumn(col) {
+			continue
+		}
 		diff := maxValueLengths[col] - valueLength(col)
 		diff = max(diff, 0)
 		_, err := fmt.Fprintf(w, "| %s%s ", strings.Repeat(" ", diff), col)
@@ -123,6 +159,9 @@ func (t *Tabulator) Print(w io.Writer) error {
 
 	// columns second row
 	for _, col := range t.cols {
+		if !t.isActiveColumn(col) {
+			continue
+		}
 		_, err := fmt.Fprintf(w, "|%s", strings.Repeat("-", maxValueLengths[col]+2))
 		if err != nil {
 			return err
@@ -135,6 +174,9 @@ func (t *Tabulator) Print(w io.Writer) error {
 
 	for _, row := range t.rows {
 		for _, col := range t.cols {
+			if !t.isActiveColumn(col) {
+				continue
+			}
 			diff := maxValueLengths[col] - valueLength(row[col])
 			diff = max(diff, 0)
 			_, err := fmt.Fprintf(w, "| %s%s ", strings.Repeat(" ", diff), valueString(row[col]))
@@ -155,6 +197,9 @@ func (t *Tabulator) colMaxValueLengths() map[string]int {
 	lengths := make(map[string]int, 0)
 	for _, row := range t.rows {
 		for _, col := range t.cols {
+			if !t.isActiveColumn(col) {
+				continue
+			}
 			vl := valueLength(row[col])
 			vl = max(vl, valueLength(col))
 			if oldLen, ok := lengths[col]; ok {
@@ -167,6 +212,13 @@ func (t *Tabulator) colMaxValueLengths() map[string]int {
 		}
 	}
 	return lengths
+}
+
+func (t *Tabulator) isActiveColumn(col string) bool {
+	if active, ok := t.activeColumns[col]; ok {
+		return active
+	}
+	return true
 }
 
 func valueLength(val any) int {

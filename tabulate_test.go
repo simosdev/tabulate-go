@@ -171,6 +171,58 @@ func TestAddWithPredefinedColumns(t *testing.T) {
 	assertRows(t, expectedLines, res)
 }
 
+func TestAddRowWithCustomActiveColumns(t *testing.T) {
+	tab := New([]string{"a", "b", "c"})
+	tab.AddRow(Row{"a": 1})
+	tab.AddRow(Row{"a": 10, "c": 30, "b": 20})
+	tab.AddRow(Row{"b": 2})
+
+	tab.SetActiveColumns("a", "c")
+	out := bytes.NewBuffer(nil)
+	err := tab.Print(out)
+	if err != nil {
+		t.Fatalf("Print failed: %s", err)
+	}
+
+	expectedLines := []string{
+		"|  a |  c |",
+		"|----|----|",
+		"|  1 |    |",
+		"| 10 | 30 |",
+		"|    |    |",
+		"",
+	}
+
+	res := out.String()
+	assertRows(t, expectedLines, res)
+}
+
+func TestAddRowWithCustomActiveColumnsMap(t *testing.T) {
+	tab := New([]string{"a", "b", "c"})
+	tab.AddRow(Row{"a": 1})
+	tab.AddRow(Row{"a": 10, "c": 30, "b": 20})
+	tab.AddRow(Row{"b": 2})
+
+	tab.SetActiveColumnsMap(map[string]bool{"b": false})
+	out := bytes.NewBuffer(nil)
+	err := tab.Print(out)
+	if err != nil {
+		t.Fatalf("Print failed: %s", err)
+	}
+
+	expectedLines := []string{
+		"|  a |  c |",
+		"|----|----|",
+		"|  1 |    |",
+		"| 10 | 30 |",
+		"|    |    |",
+		"",
+	}
+
+	res := out.String()
+	assertRows(t, expectedLines, res)
+}
+
 func TestStringWidth(t *testing.T) {
 	res := valueLength("\033[31mHello\033[0m \033[32mWorld\033[0m")
 	expected := 11
